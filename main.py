@@ -30,7 +30,8 @@ bot.load_extension('cogs.funcs.support')
 bot.load_extension('cogs.funcs.tickets')
 bot.load_extension('cogs.funcs.user')
 
-# Create database connection
+# Setup database if not exists and create database connection
+db.setup_database()
 db.create_connection()
 
 # Start bot
