@@ -2,11 +2,16 @@ import interactions as ipy
 from datetime import datetime, timedelta
 
 # Collection of commands for discord moderation purposes
-# TODO: Implement timeout command
 class Mod(ipy.Extension):
     def __init__(self, bot) -> None:
         self.bot: ipy.Client = bot
     
+
+    # Command for timing out a user
+    # Parameters:
+    #   user (ipy.Member) - User to be timed out
+    #   time (int) - Time in minutes for the timeout
+    #   reason (str) - Reason for the timeout
     @ipy.slash_command(
         name='timeout',
         description='Timeoute hiermit einen User'
@@ -37,5 +42,5 @@ class Mod(ipy.Extension):
     )
     async def timeout(self, ctx: ipy.SlashContext, user: ipy.Member, time: int, reason: str) -> None:
         await user.timeout(communication_disabled_until=datetime.now()+timedelta(minutes=time), reason=reason)
-        await user.send(f'Du wurdest für **{time}** Minuten vom .Roleplay Discord getimeouted.\nDer Grund des Timeouts ist:```{reason}```')
+        await user.send(f'# Timeout\nDu wurdest für **{time}** Minuten vom Peak Roleplay Discord getimeouted.\nDer Grund des Timeouts ist:```{reason}```')
         await ctx.send(f'User: {user.mention} wurde für **{time}** Minuten von {ctx.user.mention} getimeouted.\nGrund: {reason}')

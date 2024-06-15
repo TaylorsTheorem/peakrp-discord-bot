@@ -3,14 +3,12 @@ from interactions.ext.paginators import Paginator
 from config import CHANNEL_IDS, LOGO_URL
 from datetime import datetime
 import cogs.funcs.db as db
-from cogs.funcs.utils import Utils
 
 
 # Collection of commands for support related tasks
 class Support(ipy.Extension):
     def __init__(self, bot) -> None:
         self.bot: ipy.Client = bot
-        self.utils = Utils(bot)
 
 
     # Base command for support related tasks

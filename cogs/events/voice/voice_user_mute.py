@@ -12,6 +12,6 @@ class VoiceUserMute(ipy.Extension):
     @ipy.listen()
     async def voice_user_mute(self, event: ipy.events.VoiceUserMute):
         # Check if the user is the Maestro, Deltixx or the bot
-        if event.author.id in [USER_IDS['maestro'], USER_IDS['deltixx'], USER_IDS['bot']]:
+        if event.author.id in [USER_IDS['deltixx'], self.bot.owner.id, self.bot.user.id]:
             # Unmute the user
             await event.state.member.edit(mute=False)

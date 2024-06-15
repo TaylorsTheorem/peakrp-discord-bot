@@ -15,9 +15,5 @@ class Ready(ipy.Extension):
         guild = await self.bot.fetch_guild(GUILD_ID, force=True)
         guild.max_presences = 10000
         await guild.gateway_chunk(wait=True, presences=True)
-        guild = next((g for g in self.bot.guilds if g.id == GUILD_ID), None)
-        if guild is None:
-            print(f"Guild with ID {GUILD_ID} not found.")
-            return
 
         print('ready')

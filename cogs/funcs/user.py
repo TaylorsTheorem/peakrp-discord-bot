@@ -1,7 +1,7 @@
 import interactions as ipy
 from datetime import datetime
 from config import LOGO_URL, ROLE_IDS
-from cogs.funcs.utils import Utils
+from cogs.funcs.utils import get_status
 import cogs.funcs.db as db
 
 
@@ -9,7 +9,6 @@ import cogs.funcs.db as db
 class User(ipy.Extension):
     def __init__(self, bot) -> None:
         self.bot: ipy.Client = bot
-        self.utils = Utils(bot)
     
     # Base command for user related tasks
     @ipy.slash_command(
@@ -36,8 +35,9 @@ class User(ipy.Extension):
 
         # Get user status, if not in cache (= changed presence since starting bot), try to find in gateway cache / fetch from API
         if isinstance(user.status, ipy.Missing):
-            user_status = self.utils.get_status(user)
+            user_status = get_status(self.bot, user)
         else:
+            # Result is a string like 'Status.ONLINE', so remove 'Status.' and make it lowercase
             user_status = str(user.status)[7:].lower()
 
         # Create and send embed with user information

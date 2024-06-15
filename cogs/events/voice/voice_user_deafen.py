@@ -12,6 +12,6 @@ class VoiceUserDeafen(ipy.Extension):
     @ipy.listen()
     async def voice_user_deafen(self, event: ipy.events.VoiceUserDeafen):
         # Check if the user is the Maestro, Deltixx or the bot
-        if event.author.id in [USER_IDS['maestro'], USER_IDS['deltixx'], USER_IDS['bot']]:
+        if event.author.id in [USER_IDS['deltixx'], self.bot.owner.id, self.bot.user.id]:
             # Undeafen the user
             await event.state.member.edit(deaf=False)

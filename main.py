@@ -19,16 +19,13 @@ bot = ipy.Client(
 # Load extensions
 bot.load_extension('cogs.events.bot.ready')
 
-bot.load_extension('cogs.events.voice.voice_user_join')
-bot.load_extension('cogs.events.voice.voice_user_move')
-bot.load_extension('cogs.events.voice.voice_user_leave')
 bot.load_extension('cogs.events.voice.voice_user_mute')
 bot.load_extension('cogs.events.voice.voice_user_deafen')
 
-# bot.load_extension('cogs.funcs.cfx_api') currently disabled due to unfinished implementation
+bot.load_extension('cogs.funcs.cfx_api')
 bot.load_extension('cogs.funcs.loa')
-# bot.load_extension('cogs.funcs.mod') currently disabled due to unfinished implementation
-# bot.load_extension('cogs.funcs.send') currently disabled due to unfinished implementation
+bot.load_extension('cogs.funcs.mod')
+bot.load_extension('cogs.funcs.send')
 bot.load_extension('cogs.funcs.support')
 bot.load_extension('cogs.funcs.tickets')
 bot.load_extension('cogs.funcs.user')
