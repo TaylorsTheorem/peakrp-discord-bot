@@ -1,3 +1,5 @@
 __pycache__
 peak.db
+data.json
+players.json
 cogs/lavalink/logs/*
