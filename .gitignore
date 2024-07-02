@@ -1,2 +1,3 @@
 __pycache__
 peak.db
+cogs/lavalink/logs/*
