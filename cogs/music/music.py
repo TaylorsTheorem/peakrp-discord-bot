@@ -18,6 +18,7 @@ class Music(ipy.Extension):
         self.lavalink.add_node('localhost', '2333', 'youshallnotpass', 'de')
         print('Music extension loaded')
 
+    # Base command for music
     @ipy.slash_command(
         name='music',
         description='Spiele Musik ab',
@@ -25,6 +26,9 @@ class Music(ipy.Extension):
     async def music(self, ctx: ipy.SlashContext) -> None:
         pass
 
+    # Subcommand for playing music
+    # Parameters:
+    #   query: str - The query to search for a song
     @music.subcommand(sub_cmd_description='Spiele Musik ab!')
     @ipy.slash_option(
         name='query',
@@ -33,27 +37,32 @@ class Music(ipy.Extension):
         required=True
     )
     async def play(self, ctx: ipy.SlashContext, query: str) -> None:
+        # Get voice state of the author, if not in a voice channel, return
         voice_state = ctx.author.voice
         if not voice_state or not voice_state.channel:
             await ctx.send("Du bist in keinem Channel.", ephemeral=True, delete_after=10)
             return
         
+        # Regex for checking if the query is a URL, if not add ytsearch: to the query for searching on youtube
         url_rx = re.compile(r'https?://(?:www\.)?.+')
         if not url_rx.match(query):
             query = f'ytsearch:{query}'
 
-        message = await fancy_message(ctx, f"Loading search results...")
+        message = await send_fancy_message(ctx, f"Loading search results...")
 
+        # Connect to the voice channel and get tracks
         player = await self.lavalink.connect(voice_state.guild.id, voice_state.channel.id)
         results: lavalink.LoadResult = await self.lavalink.client.get_tracks(query, check_local=False)
         
+        # If no results found, return
         if results.load_type == lavalink.LoadType.EMPTY:
             return await ctx.send("Konnte keine Ergebnisse zu deiner Anfrage finden...")
+        # If the load type is a playlist, add all tracks to the queue
         elif results.load_type == lavalink.LoadType.PLAYLIST:
             tracks = results.tracks
-            # Add all of the tracks from the playlist to the queue.
             for track in tracks:
                 player.add(track=track, requester=ctx.author.id)
+        # If the load type is a track, add the track to the queue
         else:
             track = results.tracks[0]
 
@@ -61,27 +70,30 @@ class Music(ipy.Extension):
         
         await message.delete()
         
-        player.store('Channel', ctx.channel)
+        player.store('Channel', ctx.channel) # Store the channel for later use
         
+        # If the player playing, add the track to the queue, else play the track
         if player.is_playing:
-            add_to_queue_embed = self.added_to_playlist_embed(ctx, player, tracks[0])
+            add_to_queue_embed = self.create_added_to_playlist_embed(ctx, player, tracks[0])
 
             return await ctx.channel.send(embeds=add_to_queue_embed)
         else:
             await player.play()
-        
+    
+    # Subcommand for pausing the music
     @music.subcommand(sub_cmd_description="Stoppe die Musik!")
     async def stop(self, ctx: ipy.SlashContext):
         player: Player = self.lavalink.get_player(ctx.guild_id)
 
         if player is None:
-            return await fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
 
         player.current = None
         await self.lavalink.disconnect(ctx.guild_id)
 
-        await fancy_message(ctx, f"{ctx.author.mention} hat den Player gestopped.")
+        await send_fancy_message(ctx, f"{ctx.author.mention} hat den Player gestopped.")
 
+    # Base command for adding filters to the player
     @ipy.slash_command(
         name='music_filter',
         description='Stelle einen Filter ein!'
@@ -89,6 +101,10 @@ class Music(ipy.Extension):
     async def music_filter(self, ctx: ipy.SlashContext):
         pass
     
+    # Subcommand for setting an equalizer
+    # Parameters:
+    #   band: int - Band of the equalizer, must be between 0 and 14
+    #   gain: float - Gain of the equalizer, must be between -0.25 and 1.0
     @music_filter.subcommand(sub_cmd_description="Stelle einen Equalizer ein!")
     @ipy.slash_option(name='band', description='Band des Equalizers.', opt_type=ipy.OptionType.INTEGER, required=True)
     @ipy.slash_option(name='gain', description='Gain des Equalizers.', opt_type=ipy.OptionType.NUMBER, required=True)
@@ -96,25 +112,28 @@ class Music(ipy.Extension):
         player: Player = self.lavalink.get_player(ctx.guild_id)
 
         if not player:
-            return await fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
 
         if band == 0 and gain == 0:
             await player.remove_filter('equalizer')
-            await fancy_message(ctx, '**Equalizer** ausgeschaltet')
+            await send_fancy_message(ctx, '**Equalizer** ausgeschaltet')
 
         if band < 0 or band > 14:
-            return await fancy_message(ctx, "Band muss zwischen 0 und 14 sein.", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Band muss zwischen 0 und 14 sein.", color=0xff0000, ephemeral=True)
 
         if gain < -0.25 or gain > 1.0:
-            return await fancy_message(ctx, "Gain muss zwischen -0.25 und 1.0 sein.", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Gain muss zwischen -0.25 und 1.0 sein.", color=0xff0000, ephemeral=True)
 
 
         equalizer = lavalink.Equalizer()
         equalizer.update(band=band, gain=gain)
         await player.set_filter(equalizer)
 
-        await fancy_message(ctx, f"{ctx.user.mention} hat den Equalizer auf Band {band} und Gain {gain} gesetzt.")
+        await send_fancy_message(ctx, f"{ctx.user.mention} hat den Equalizer auf Band {band} und Gain {gain} gesetzt.")
 
+    # Subcommand for setting a low pass filter
+    # Parameters:
+    #   strength: float - Strength of the low pass filter, must be between 0 and 100
     @music_filter.subcommand(sub_cmd_description="Stelle einen Low Pass Filter ein!")
     @ipy.slash_option(name='strength', description='Setze den Lowpass Filter.', opt_type=ipy.OptionType.INTEGER, required=True)
     async def lowpass(self, ctx: ipy.SlashContext, strength: float = 0):
@@ -122,24 +141,30 @@ class Music(ipy.Extension):
         player: Player = self.lavalink.get_player(ctx.guild_id)
 
         if not player:
-            return await fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
 
         if strength < 0:
-            return await fancy_message(ctx, "Stärke muss größer als 0 sein.", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Stärke muss größer als 0 sein.", color=0xff0000, ephemeral=True)
 
         if strength > 100:
-            return await fancy_message(ctx, "Stärke muss kleiner als 100 sein.", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Stärke muss kleiner als 100 sein.", color=0xff0000, ephemeral=True)
         
         if strength == 0:
             await player.remove_filter('lowpass')
-            await fancy_message(ctx, '**Low Pass Filter** ausgeschaltet')
+            await send_fancy_message(ctx, '**Low Pass Filter** ausgeschaltet')
 
         lowpass = lavalink.LowPass()
         lowpass.update(smoothing=strength)
         await player.set_filter(lowpass)
 
-        await fancy_message(ctx, f"{ctx.user.mention} hat den Lowpass Filter auf {strength} gesetzt.")
+        await send_fancy_message(ctx, f"{ctx.user.mention} hat den Lowpass Filter auf {strength} gesetzt.")
     
+    # Subcommand for setting a karaoke filter
+    # Parameters:
+    #   level: float - Level of the karaoke filter, must be greater than 0
+    #   mono_level: float - Mono level of the karaoke filter, must be greater than 0
+    #   filter_band: float - Filter band of the karaoke filter, must be greater than 0
+    #   filter_width: float - Filter width of the karaoke filter, must be greater than 0
     @music_filter.subcommand(sub_cmd_description="Stelle einen Karaoke Filter ein!")
     @ipy.slash_option(name='level', description='Level des Karaoke Filters.', opt_type=ipy.OptionType.NUMBER, required=True)
     @ipy.slash_option(name='mono_level', description='Mono Level des Karaoke Filters.', opt_type=ipy.OptionType.NUMBER, required=True)
@@ -149,21 +174,26 @@ class Music(ipy.Extension):
         player: Player = self.lavalink.get_player(ctx.guild_id)
 
         if not player:
-            return await fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
 
         if level < 0 or mono_level < 0 or filter_band < 0 or filter_width < 0:
-            return await fancy_message(ctx, "Alle Werte müssen größer gleich 0 sein.", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Alle Werte müssen größer gleich 0 sein.", color=0xff0000, ephemeral=True)
 
         if level == 0 and mono_level == 0 and filter_band == 0 and filter_width == 0:
             await player.remove_filter('karaoke')
-            await fancy_message(ctx, '**Karaoke Filter** ausgeschaltet')
+            await send_fancy_message(ctx, '**Karaoke Filter** ausgeschaltet')
 
         karaoke = lavalink.Karaoke()
         karaoke.update(level=level, mono_level=mono_level, filter_band=filter_band, filter_width=filter_width)
         await player.set_filter(karaoke)
 
-        await fancy_message(ctx, f"{ctx.user.mention} hat den Karaoke Filter auf {level}, {mono_level}, {filter_band}, {filter_width} gesetzt.")
+        await send_fancy_message(ctx, f"{ctx.user.mention} hat den Karaoke Filter auf {level}, {mono_level}, {filter_band}, {filter_width} gesetzt.")
 
+    # Subcommand for setting a timescale filter
+    # Parameters:
+    #   pitch: float - Pitch of the timescale filter, must be greater than 0.1
+    #   rate: float - Rate of the timescale filter, must be greater than 0.1
+    #   speed: float - Speed of the timescale filter, must be greater than 0.1
     @music_filter.subcommand(sub_cmd_description='Stelle einen Timescale Filter ein!')
     @ipy.slash_option(name='pitch', description='Pitch des Timescale Filters.', opt_type=ipy.OptionType.NUMBER, required=True)
     @ipy.slash_option(name='rate', description='Rate des Timescale Filters.', opt_type=ipy.OptionType.NUMBER, required=True)
@@ -173,21 +203,25 @@ class Music(ipy.Extension):
         player: Player = self.lavalink.get_player(ctx.guild_id)
 
         if not player:
-            return await fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
 
         if pitch < 0.1 or rate < 0.1 or speed < 0.1:
-            return await fancy_message(ctx, "Alle Werte müssen größer gleich 0.1 sein.", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Alle Werte müssen größer gleich 0.1 sein.", color=0xff0000, ephemeral=True)
 
         if pitch == 0 and rate == 0 and speed == 0:
             await player.remove_filter('timescale')
-            await fancy_message(ctx, '**Timescale Filter** ausgeschaltet')
+            await send_fancy_message(ctx, '**Timescale Filter** ausgeschaltet')
 
         timescale = lavalink.Timescale()
         timescale.update(pitch=pitch, rate=rate, speed=speed)
         await player.set_filter(timescale)
 
-        await fancy_message(ctx, f"{ctx.user.mention} hat den Timescale Filter auf {pitch}, {rate}, {speed} gesetzt.")
-        
+        await send_fancy_message(ctx, f"{ctx.user.mention} hat den Timescale Filter auf {pitch}, {rate}, {speed} gesetzt.")
+    
+    # Subcommand for setting a tremolo filter
+    # Parameters:
+    #   depth: float - Depth of the tremolo filter, must be greater than 0 and less than 1
+    #   frequency: float - Frequency of the tremolo filter, must be greater than 0
     @music_filter.subcommand(sub_cmd_description='Stelle einen Tremolo Filter ein!')
     @ipy.slash_option(name='depth', description='Depth des Tremolo Filters.', opt_type=ipy.OptionType.NUMBER, required=True)
     @ipy.slash_option(name='frequency', description='Frequency des Tremolo Filters.', opt_type=ipy.OptionType.NUMBER, required=True)
@@ -196,24 +230,28 @@ class Music(ipy.Extension):
         player: Player = self.lavalink.get_player(ctx.guild_id)
 
         if not player:
-            return await fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
-
-        if depth <= 0 or frequency <= 0:
-            return await fancy_message(ctx, "Alle Werte müssen größer als 0 sein.", color=0xff0000, ephemeral=True)
-        
-        if depth > 1:
-            return await fancy_message(ctx, "Depth muss kleiner gleich 1 sein.", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
 
         if depth == 0 and frequency == 0:
             await player.remove_filter('tremolo')
-            await fancy_message(ctx, '**Tremolo Filter** ausgeschaltet')
+            await send_fancy_message(ctx, '**Tremolo Filter** ausgeschaltet')
+
+        if depth <= 0 or frequency <= 0:
+            return await send_fancy_message(ctx, "Alle Werte müssen größer als 0 sein.", color=0xff0000, ephemeral=True)
+        
+        if depth > 1:
+            return await send_fancy_message(ctx, "Depth muss kleiner gleich 1 sein.", color=0xff0000, ephemeral=True)
 
         tremolo = lavalink.Tremolo()
         tremolo.update(depth=depth, frequency=frequency)
         await player.set_filter(tremolo)
 
-        await fancy_message(ctx, f"{ctx.user.mention} hat den Tremolo Filter auf {depth}, {frequency} gesetzt.")
+        await send_fancy_message(ctx, f"{ctx.user.mention} hat den Tremolo Filter auf {depth}, {frequency} gesetzt.")
     
+    # Subcommand for setting a vibrato filter
+    # Parameters:
+    #   depth: float - Depth of the vibrato filter, must be greater than 0 and less than 1
+    #   frequency: float - Frequency of the vibrato filter, must be greater than 0 and less than 14
     @music_filter.subcommand(sub_cmd_description='Stelle einen Vibrato Filter ein!')
     @ipy.slash_option(name='depth', description='Depth des Vibrato Filters.', opt_type=ipy.OptionType.NUMBER, required=True)
     @ipy.slash_option(name='frequency', description='Frequency des Vibrato Filters.', opt_type=ipy.OptionType.NUMBER, required=True)
@@ -222,27 +260,30 @@ class Music(ipy.Extension):
         player: Player = self.lavalink.get_player(ctx.guild_id)
 
         if not player:
-            return await fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
-
-        if depth <= 0 or frequency <= 0:
-            return await fancy_message(ctx, "Alle Werte müssen größer als 0 sein.", color=0xff0000, ephemeral=True)
-        
-        if depth > 1:
-            return await fancy_message(ctx, "Depth muss kleiner gleich 1 sein.", color=0xff0000, ephemeral=True)
-        
-        if frequency > 14:
-            return await fancy_message(ctx, "Frequency muss kleiner gleich 14 sein.", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
 
         if depth == 0 and frequency == 0:
             await player.remove_filter('vibrato')
-            await fancy_message(ctx, '**Vibrato Filter** ausgeschaltet')
+            await send_fancy_message(ctx, '**Vibrato Filter** ausgeschaltet')
+
+        if depth <= 0 or frequency <= 0:
+            return await send_fancy_message(ctx, "Alle Werte müssen größer als 0 sein.", color=0xff0000, ephemeral=True)
+        
+        if depth > 1:
+            return await send_fancy_message(ctx, "Depth muss kleiner gleich 1 sein.", color=0xff0000, ephemeral=True)
+        
+        if frequency > 14:
+            return await send_fancy_message(ctx, "Frequency muss kleiner gleich 14 sein.", color=0xff0000, ephemeral=True)
 
         vibrato = lavalink.Vibrato()
         vibrato.update(depth=depth, frequency=frequency)
         await player.set_filter(vibrato)
 
-        await fancy_message(ctx, f"{ctx.user.mention} hat den Vibrato Filter auf {depth}, {frequency} gesetzt.")
-
+        await send_fancy_message(ctx, f"{ctx.user.mention} hat den Vibrato Filter auf {depth}, {frequency} gesetzt.")
+    
+    # Subcommand for setting a rotation filter
+    # Parameters:
+    #   rotation_hz: float - Rotation of the rotation filter, must be greater than 0
     @music_filter.subcommand(sub_cmd_description='Stelle einen Rotation Filter ein!')
     @ipy.slash_option(name='rotation', description='Rotation des Rotation Filters.', opt_type=ipy.OptionType.NUMBER, required=True)
     async def rotation(self, ctx: ipy.SlashContext, rotation_hz: float = 0):
@@ -250,21 +291,31 @@ class Music(ipy.Extension):
         player: Player = self.lavalink.get_player(ctx.guild_id)
 
         if not player:
-            return await fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
 
         if rotation < 0:
-            return await fancy_message(ctx, "Rotation muss größer gleich 0 sein.", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Rotation muss größer gleich 0 sein.", color=0xff0000, ephemeral=True)
 
         if rotation == 0:
             await player.remove_filter('rotation')
-            await fancy_message(ctx, '**Rotation Filter** ausgeschaltet')
+            await send_fancy_message(ctx, '**Rotation Filter** ausgeschaltet')
 
         rotation = lavalink.Rotation()
         rotation.update(rotation_hz=rotation_hz)
         await player.set_filter(rotation)
 
-        await fancy_message(ctx, f"{ctx.user.mention} hat den Rotation Filter auf {rotation} gesetzt.")
+        await send_fancy_message(ctx, f"{ctx.user.mention} hat den Rotation Filter auf {rotation} gesetzt.")
 
+    # Subcommand for setting a distortion filter
+    # Parameters:
+    #   sin_offset: float - Sin offset of the distortion filter
+    #   sin_scale: float - Sin scale of the distortion filter
+    #   cos_offset: float - Cos offset of the distortion filter
+    #   cos_scale: float - Cos scale of the distortion filter
+    #   tan_offset: float - Tan offset of the distortion filter
+    #   tan_scale: float - Tan scale of the distortion filter
+    #   offset: float - Offset of the distortion filter
+    #   scale: float - Scale of the distortion filter
     @music_filter.subcommand(sub_cmd_description='Stelle einen Distortion Filter ein!')
     @ipy.slash_option(name='sin_offset', description='Sin Offset des Distortion Filters.', opt_type=ipy.OptionType.NUMBER, required=False)
     @ipy.slash_option(name='sin_scale', description='Sin Scale des Distortion Filters.', opt_type=ipy.OptionType.NUMBER, required=False)
@@ -278,18 +329,24 @@ class Music(ipy.Extension):
         player: Player = self.lavalink.get_player(ctx.guild_id)
 
         if not player:
-            return await fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
 
         if sin_offset == 0 and sin_scale == 0 and cos_offset == 0 and cos_scale == 0 and tan_offset == 0 and tan_scale == 0 and offset == 0 and scale == 0:
             await player.remove_filter('distortion')
-            await fancy_message(ctx, '**Distortion Filter** ausgeschaltet')
+            await send_fancy_message(ctx, '**Distortion Filter** ausgeschaltet')
 
         distortion = lavalink.Distortion()
         distortion.update(sin_offset=sin_offset, sin_scale=sin_scale, cos_offset=cos_offset, cos_scale=cos_scale, tan_offset=tan_offset, tan_scale=tan_scale, offset=offset, scale=scale)
         await player.set_filter(distortion)
 
-        await fancy_message(ctx, f"{ctx.user.mention} hat den Distortion Filter auf {sin_offset}, {sin_scale}, {cos_offset}, {cos_scale}, {tan_offset}, {tan_scale}, {offset}, {scale} gesetzt.")
+        await send_fancy_message(ctx, f"{ctx.user.mention} hat den Distortion Filter auf {sin_offset}, {sin_scale}, {cos_offset}, {cos_scale}, {tan_offset}, {tan_scale}, {offset}, {scale} gesetzt.")
 
+    # Subcommand for setting a channel mix filter
+    # Parameters:
+    #   left_to_left: float - Left to Left of the channel mix filter, must be between 0 and 1
+    #   left_to_right: float - Left to Right of the channel mix filter, must be between 0 and 1
+    #   right_to_left: float - Right to Left of the channel mix filter, must be between 0 and 1
+    #   right_to_right: float - Right to Right of the channel mix filter, must be between 0 and 1
     @music_filter.subcommand(sub_cmd_description='Stelle einen Channel Mix Filter ein!')
     @ipy.slash_option(name='left_to_left', description='Left to Left des Channel Mix Filters.', opt_type=ipy.OptionType.NUMBER, required=True)
     @ipy.slash_option(name='left_to_right', description='Left to Right des Channel Mix Filters.', opt_type=ipy.OptionType.NUMBER, required=True)
@@ -299,23 +356,26 @@ class Music(ipy.Extension):
         player: Player = self.lavalink.get_player(ctx.guild_id)
 
         if not player:
-            return await fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
         
         if left_to_left < 0 or left_to_right < 0 or right_to_left < 0 or right_to_right < 0:
-            return await fancy_message(ctx, "Alle Werte müssen größer gleich 0 sein.", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Alle Werte müssen größer gleich 0 sein.", color=0xff0000, ephemeral=True)
         if left_to_left > 1 or left_to_right > 1 or right_to_left > 1 or right_to_right > 1:
-            return await fancy_message(ctx, "Alle Werte müssen kleiner gleich 1 sein.", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Alle Werte müssen kleiner gleich 1 sein.", color=0xff0000, ephemeral=True)
 
         if left_to_left == 0 and left_to_right == 0 and right_to_left == 0 and right_to_right == 0:
             await player.remove_filter('channelmix')
-            await fancy_message(ctx, '**Channel Mix Filter** ausgeschaltet')
+            await send_fancy_message(ctx, '**Channel Mix Filter** ausgeschaltet')
 
         channelmix = lavalink.ChannelMix()
         channelmix.update(left_to_left=left_to_left, left_to_right=left_to_right, right_to_left=right_to_left, right_to_right=right_to_right)
         await player.set_filter(channelmix)
 
-        await fancy_message(ctx, f"{ctx.user.mention} hat den Channel Mix Filter auf {left_to_left}, {left_to_right}, {right_to_left}, {right_to_right} gesetzt.")
+        await send_fancy_message(ctx, f"{ctx.user.mention} hat den Channel Mix Filter auf {left_to_left}, {left_to_right}, {right_to_left}, {right_to_right} gesetzt.")
     
+    # Subcommand for setting a volume filter
+    # Parameters:
+    #   volume: float - Volume of the player, must be between 0 and 5
     @music_filter.subcommand(sub_cmd_description='Stelle die Lautstärke ein!')
     @ipy.slash_option(name='volume', description='Lautstärke des Players.', opt_type=ipy.OptionType.NUMBER, required=True)
     async def volume(self, ctx: ipy.SlashContext, volume: float = 1):
@@ -323,49 +383,53 @@ class Music(ipy.Extension):
         player: Player = self.lavalink.get_player(ctx.guild_id)
 
         if not player:
-            return await fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
 
         if volume < 0 or volume > 5:
-            return await fancy_message(ctx, "Lautstärke muss zwischen 0 und 5 sein. 1 = 100%", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Lautstärke muss zwischen 0 und 5 sein. 1 = 100%", color=0xff0000, ephemeral=True)
 
         await player.set_volume(volume)
 
-        await fancy_message(ctx, f"{ctx.user.mention} hat die Lautstärke auf {volume} gesetzt.")
+        await send_fancy_message(ctx, f"{ctx.user.mention} hat die Lautstärke auf {volume} gesetzt.")
 
+    # Subcommand for clearing all filters
     @music_filter.subcommand(sub_cmd_description='Cleare alle Filter!')
     async def clear(self, ctx: ipy.SlashContext):
         player: Player = self.lavalink.get_player(ctx.guild_id)
 
         if not player:
-            return await fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
 
         await player.clear_filters()
 
-        await fancy_message(ctx, f"{ctx.user.mention} hat alle Filter gelöscht.")
+        await send_fancy_message(ctx, f"{ctx.user.mention} hat alle Filter gelöscht.")
 
-
+    # Base command for controlling the queue
     @ipy.slash_command(description="Weitere Controls für die Warteschlange!")
     async def music_queue(self, ctx: ipy.SlashContext):
         pass
     
+    # Subcommand for jumping to a song in the queue
+    # Parameters:
+    #   position: int - Position of the song to jump to
     @music_queue.subcommand(sub_cmd_description="Skippe zu einem Song!")
     @ipy.slash_option(name="position", description="Position des Songs zu dem du skippen willst.", opt_type=ipy.OptionType.INTEGER, required=True)
     async def jump(self, ctx: ipy.SlashContext, position: int):
 
         voice_state = ctx.author.voice
         if not voice_state or not voice_state.channel:
-            return await fancy_message(ctx, "Du bist in keinem Voice-Channel.", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Du bist in keinem Voice-Channel.", color=0xff0000, ephemeral=True)
 
         player: Player = self.lavalink.get_player(ctx.guild_id)
 
         if player is None:
-            return await fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Keinen Player gefunden, mach was rein!", color=0xff0000, ephemeral=True)
 
         if len(player.queue) == 0:
-            return await fancy_message(ctx, "Warteschlange ist leer!", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Warteschlange ist leer!", color=0xff0000, ephemeral=True)
 
         if position > len(player.queue) or position < 0:
-            return await fancy_message(ctx, "Ungültige Position!", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Ungültige Position!", color=0xff0000, ephemeral=True)
 
         song = player.queue[position]
 
@@ -377,41 +441,44 @@ class Music(ipy.Extension):
 
         await player.skip()
 
-        await fancy_message(ctx, f'{ctx.user.mention} hat zu **{song.title}** geskipped!')
+        await send_fancy_message(ctx, f'{ctx.user.mention} hat zu **{song.title}** geskipped!')
 
+    # Subcommand for removing a song from the queue
+    # Parameters:
+    #   position: int - Position of the song to remove
     @music_queue.subcommand(sub_cmd_description="Entferne einen Song von der Warteschlange.")
     @ipy.slash_option(name="position", description="Position des Liedes in der Warteschlange.", opt_type=ipy.OptionType.INTEGER, required=True)
     async def remove(self, ctx: ipy.SlashContext, position: int):
 
         voice_state = ctx.author.voice
         if not voice_state or not voice_state.channel:
-            return await fancy_message(ctx, "Du bist in keinem Voice-Channel.", color=0xff0000,
+            return await send_fancy_message(ctx, "Du bist in keinem Voice-Channel.", color=0xff0000,
                                        ephemeral=True)
 
         player: Player = self.lavalink.get_player(ctx.guild_id)
 
         if player is None:
-            return await fancy_message(ctx, "Gerade keinen Player gefunden, mach was rein!", color=0xff0000,
+            return await send_fancy_message(ctx, "Gerade keinen Player gefunden, mach was rein!", color=0xff0000,
                                        ephemeral=True)
 
         if len(player.queue) == 0:
-            return await fancy_message(ctx, "Warteschlange ist leer!", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Warteschlange ist leer!", color=0xff0000, ephemeral=True)
 
         if position > len(player.queue) or position < 0:
-            return await fancy_message(ctx, "Ungültige Position!", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Ungültige Position!", color=0xff0000, ephemeral=True)
 
         song = player.queue[position]
         
         can_remove = self.can_modify(player, ctx.author, ctx.guild_id)
         
         if song.requester != ctx.author.id and not can_remove:
-            return await fancy_message(ctx, "Du kannst diesen Song nicht entfernen!", color=0xff0000, ephemeral=True)
+            return await send_fancy_message(ctx, "Du kannst diesen Song nicht entfernen!", color=0xff0000, ephemeral=True)
 
         del player.queue[position]
 
-        await fancy_message(ctx, f'{ctx.user.mention} entfernte **{song.title}** von der Warteschlange.')
+        await send_fancy_message(ctx, f'{ctx.user.mention} entfernte **{song.title}** von der Warteschlange.')
     
-
+    # Remove a song from the autocomplete list
     @remove.autocomplete('position')
     async def autocomplete_remove(self, ctx: ipy.AutocompleteContext):
 
@@ -445,6 +512,7 @@ class Music(ipy.Extension):
 
         await ctx.send(choices)
 
+    # Remove all songs before jump position from autocomplete list
     @jump.autocomplete('position')
     async def autocomplete_jump(self, ctx: ipy.AutocompleteContext):
 
@@ -478,7 +546,7 @@ class Music(ipy.Extension):
 
         await ctx.send(choices)
     
-    
+    # Listener for when a track starts playing
     @ipy.listen()
     async def on_track_start(self, event: TrackStart):
 
@@ -488,6 +556,7 @@ class Music(ipy.Extension):
 
         await self.on_player(event.player, channel)
     
+    # Listener for when voice state updates
     @ipy.listen()
     async def voice_state_update(self, event: ipy.events.VoiceUserLeave):
         player: Player = self.lavalink.get_player(event.author.guild.id)
@@ -506,11 +575,11 @@ class Music(ipy.Extension):
         if len(channel.voice_members) <= 2:
             text_channel = player.fetch('Channel')
 
-            await fancy_message(text_channel, f'Alle sind von {channel.mention} disconnected. Um Musik zu stoppen, nutze ``/music stop``.')
-        
+            await send_fancy_message(text_channel, f'Alle sind von {channel.mention} disconnected. Um Musik zu stoppen, nutze ``/music stop``.')
+    
+    # Predefined buttons for the music player
     @staticmethod
     def get_buttons():
-
         return [
             ipy.Button(
                 style=ipy.ButtonStyle.BLUE,
@@ -538,6 +607,7 @@ class Music(ipy.Extension):
             ),
         ]
 
+    # Predefined buttons for the queue
     @staticmethod
     async def get_queue_buttons():
         options = [
@@ -567,6 +637,7 @@ class Music(ipy.Extension):
 
         return options
     
+    # Main player embed message
     async def on_player(self, player: Player, channel: ipy.GuildText):
 
         if player.loop == 1:
@@ -634,6 +705,7 @@ class Music(ipy.Extension):
 
         message = await message.edit(content='<:nikosleepy:1027492467337080872>', embed=embed, components=[])
     
+    # Component Callback for the player buttons
     @ipy.component_callback('queue', 'loop', 'playpause', 'skip', 'lyrics')
     async def buttons(self, ctx: ipy.ComponentContext):
 
@@ -647,7 +719,7 @@ class Music(ipy.Extension):
             player.store("current_page", 1)
 
             if len(player.queue) < 1:
-                return await fancy_message(ctx, 'Keine Songs in der Warteschlange, nutze ``/music play`` um mehr hinzuzufügen!', ephemeral=True, color=0xff0000)
+                return await send_fancy_message(ctx, 'Keine Songs in der Warteschlange, nutze ``/music play`` um mehr hinzuzufügen!', ephemeral=True, color=0xff0000)
 
             embed = await self.get_queue_embed(player, 1)
 
@@ -655,12 +727,12 @@ class Music(ipy.Extension):
             return await ctx.send(embed=embed, components=components, ephemeral=True)
 
         if ctx.custom_id == 'lyrics':
-            message = await fancy_message(ctx, f'Searching Lyrics for this track...', ephemeral=True)
+            message = await send_fancy_message(ctx, f'Searching Lyrics for this track...', ephemeral=True)
             embed = await self.get_lyrics(player.current)
             return await ctx.edit(message, embed=embed)
 
         if not await self.can_modify(player, ctx.author, ctx.guild.id):
-            await fancy_message(ctx, 'You cannot modify the player.', ephemeral=True, color=0xff0d13)
+            await send_fancy_message(ctx, 'You cannot modify the player.', ephemeral=True, color=0xff0d13)
             return
 
         await ctx.defer(edit_origin=True)
@@ -668,27 +740,28 @@ class Music(ipy.Extension):
         if ctx.custom_id == 'loop':
             if not player.loop:
                 player.set_loop(1)
-                msg = await fancy_message(ctx.channel, f'{ctx.author.mention} Start Loop.')
+                msg = await send_fancy_message(ctx.channel, f'{ctx.author.mention} Start Loop.')
             else:
                 player.set_loop(0)
-                msg =await fancy_message(ctx.channel, f'{ctx.author.mention} Stop Loop.')
+                msg =await send_fancy_message(ctx.channel, f'{ctx.author.mention} Stop Loop.')
 
         if ctx.custom_id == 'playpause':
             await player.set_pause(not player.paused)
 
             if player.paused:
-                msg = await fancy_message(ctx.channel, f'{ctx.author.mention} Paused.')
+                msg = await send_fancy_message(ctx.channel, f'{ctx.author.mention} Paused.')
             else:
-                msg = await fancy_message(ctx.channel, f'{ctx.author.mention} Resumed.')
+                msg = await send_fancy_message(ctx.channel, f'{ctx.author.mention} Resumed.')
 
         if ctx.custom_id == 'skip':
             await player.skip()
 
-            await fancy_message(ctx.channel, f'{ctx.author.mention} Skipped.')
+            await send_fancy_message(ctx.channel, f'{ctx.author.mention} Skipped.')
             
         if msg is not None:
             await msg.delete(delay=5)
 
+    # Component Callback for the queue buttons
     @ipy.component_callback('shuffle', 'loopqueue', 'left', 'right')
     async def queue_buttons(self, ctx: ipy.ComponentContext):
 
@@ -714,15 +787,15 @@ class Music(ipy.Extension):
 
         if ctx.custom_id == 'shuffle':
             random.shuffle(player.queue)
-            message = await fancy_message(ctx.channel, f'{ctx.author.mention} hat die Wartschlange geshuffled.')
+            message = await send_fancy_message(ctx.channel, f'{ctx.author.mention} hat die Wartschlange geshuffled.')
 
         if ctx.custom_id == 'loopqueue':
             if player.loop == 2:
                 player.set_loop(0)
-                message = await fancy_message(ctx.channel, f'{ctx.author.mention} hat Loop deaktiviert.')
+                message = await send_fancy_message(ctx.channel, f'{ctx.author.mention} hat Loop deaktiviert.')
             else:
                 player.set_loop(2)
-                message = await fancy_message(ctx.channel, f'{ctx.author.mention} hat Loop aktiviert.')
+                message = await send_fancy_message(ctx.channel, f'{ctx.author.mention} hat Loop aktiviert.')
 
         embed = await self.get_queue_embed(player, page)
 
@@ -732,23 +805,25 @@ class Music(ipy.Extension):
             await asyncio.sleep(5)
             await message.delete()
     
+    # Subcommand for removing last song added by the user from the queue
     @music_filter.subcommand(sub_cmd_description='Entferne den letzten Song von dir.')
     async def remove_last(self, ctx: ipy.SlashContext):
         player = self.lavalink.get_player(ctx.guild_id)
 
         if not player:
-            return await fancy_message(ctx, 'Da gab es wohl einen Fehler, probiere es später nochmal.', ephemeral=True, color=0xff0000)
+            return await send_fancy_message(ctx, 'Da gab es wohl einen Fehler, probiere es später nochmal.', ephemeral=True, color=0xff0000)
 
         if len(player.queue) == 0:
-            return await fancy_message(ctx, 'Kein Lied in der Wartschlange.', ephemeral=True, color=0xff0000)
+            return await send_fancy_message(ctx, 'Kein Lied in der Wartschlange.', ephemeral=True, color=0xff0000)
 
         queue = player.queue[::-1]
 
         for track in queue:
             if track.requester == int(ctx.user.id):
                 player.queue.remove(track)
-                return await fancy_message(ctx, f'{ctx.user.mention} entfernte **{track.title}** von der Warteschlange.')
+                return await send_fancy_message(ctx, f'{ctx.user.mention} entfernte **{track.title}** von der Warteschlange.')
 
+    # Create an embed for the main player embed
     async def get_playing_embed(self, player_status: str, player: Player, allowed_control: bool) -> ipy.Embed:
         track = player.current
         
@@ -783,6 +858,7 @@ class Music(ipy.Extension):
 
         return embed
     
+    # Create an embed for the queue
     async def get_queue_embed(self, player: Player, page: int) -> ipy.Embed:
         queue_list = ''
 
@@ -826,6 +902,7 @@ class Music(ipy.Extension):
         
         return queue_embed
     
+    # Check if a user can modify the player
     async def can_modify(self, player: Player, author: ipy.Member, guild_id: ipy.Snowflake):
 
         requester_member: ipy.Member = await self.bot.fetch_member(player.current.requester, guild_id)
@@ -847,7 +924,8 @@ class Music(ipy.Extension):
 
         return False
     
-    def added_to_playlist_embed(self, ctx: ipy.SlashContext, player: Player, track: lavalink.AudioTrack):
+    # Create embed after edding song to queue
+    def create_added_to_playlist_embed(self, ctx: ipy.SlashContext, player: Player, track: lavalink.AudioTrack):
         add_to_queue_embed = ipy.Embed(
             title=track.title,
             url=track.uri,
@@ -865,8 +943,9 @@ class Music(ipy.Extension):
 
     def get_cover_image(self, identifier: str) -> str:
         return f'https://img.youtube.com/vi/{identifier}/0.jpg'
-    
-async def fancy_message(
+
+# Helper function for sending messages as embed
+async def send_fancy_message(
         ctx: ipy.SlashContext,
         message: str,
         color: int = 0x00ffff,
