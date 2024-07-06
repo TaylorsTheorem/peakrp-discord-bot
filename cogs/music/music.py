@@ -1,3 +1,6 @@
+# Inspired by https://github.com/axiinyaa/music-bot-template
+# and https://github.com/devoxin/Lavalink.py/blob/development/examples/music.py
+
 import re
 import uuid
 import interactions as ipy
