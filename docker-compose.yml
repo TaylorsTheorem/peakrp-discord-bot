@@ -8,7 +8,7 @@ services:
       # set Java options here
       - _JAVA_OPTIONS=-Xmx6G
       # set lavalink server port
-      - SERVER_PORT=2333
+      - SERVER_PORT=2337
       # set password for lavalink
       - LAVALINK_SERVER_PASSWORD=youshallnotpass
     volumes:
@@ -20,16 +20,16 @@ services:
       - lavalink
     expose:
       # lavalink exposes port 2333 to connect to for other containers (this is for documentation purposes only)
-      - 2333
+      - 2337
     ports:
       # you only need this if you want to make your lavalink accessible from outside of containers
-      - "2333:2333"
+      - "2337:2337"
   bot:
     build:
       context: .
     container_name: peak-bot
     expose:
-      - 2333
+      - 2337
     networks:
       - lavalink
     restart: unless-stopped
