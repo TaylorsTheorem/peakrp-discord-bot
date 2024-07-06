@@ -27,7 +27,7 @@ services:
   bot:
     build:
       context: .
-    container_name: bot
+    container_name: peak-bot
     expose:
       - 2333
     networks:
