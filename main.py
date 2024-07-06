@@ -6,7 +6,7 @@ import subprocess, signal, sys, time
 
 # Get bot token from environment
 import os
-BOT_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
+BOT_TOKEN = os.getenv('PEAK_BOT_TOKEN')
 
 # Create bot instance
 bot = ipy.Client(
