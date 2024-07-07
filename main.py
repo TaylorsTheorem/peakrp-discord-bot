@@ -1,7 +1,6 @@
 import interactions as ipy
 from config import INTENTS, BOT_STATUS, BOT_ACTIVITY
 import cogs.funcs.db as db
-import subprocess, signal, sys, time
 
 
 # Get bot token from environment
@@ -24,15 +23,13 @@ bot.load_extension('cogs.events.bot.ready')
 bot.load_extension('cogs.events.voice.voice_user_mute')
 bot.load_extension('cogs.events.voice.voice_user_deafen')
 
-# bot.load_extension('cogs.funcs.cfx_api')
+bot.load_extension('cogs.funcs.cfx_api')
 bot.load_extension('cogs.funcs.loa')
 bot.load_extension('cogs.funcs.mod')
 bot.load_extension('cogs.funcs.send')
 bot.load_extension('cogs.funcs.support')
 bot.load_extension('cogs.funcs.tickets')
 bot.load_extension('cogs.funcs.user')
-
-bot.load_extension('cogs.music.music')
 
 # Setup database if not exists and create database connection
 db.setup_database()

@@ -1,41 +1,8 @@
 services:
-  lavalink:
-    # pin the image version to Lavalink v4
-    image: ghcr.io/lavalink-devs/lavalink:4
-    container_name: peak-lavalink
-    restart: unless-stopped
-    environment:
-      # set Java options here
-      - _JAVA_OPTIONS=-Xmx6G
-      # set lavalink server port
-      - SERVER_PORT=2337
-      # set password for lavalink
-      - LAVALINK_SERVER_PASSWORD=youshallnotpass
-    volumes:
-      # mount application.yml from the lavalink directory
-      - ./cogs/lavalink/application.yml:/opt/Lavalink/application.yml
-      # persist plugins between restarts, make sure to set the correct permissions (user: 322, group: 322)
-      - ./cogs/lavalink/plugins/:/opt/Lavalink/plugins/
-    networks:
-      - lavalink
-    expose:
-      # lavalink exposes port 2333 to connect to for other containers (this is for documentation purposes only)
-      - 2337
-    ports:
-      # you only need this if you want to make your lavalink accessible from outside of containers
-      - "2337:2337"
   bot:
     build:
       context: .
     environment:
       - PEAK_BOT_TOKEN=${PEAK_BOT_TOKEN}
     container_name: peak-bot
-    expose:
-      - 2337
-    networks:
-      - lavalink
     restart: unless-stopped
-networks:
-  # create a lavalink network you can add other containers to, to give them access to Lavalink
-  lavalink:
-    name: lavalink

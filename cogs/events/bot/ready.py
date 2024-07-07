@@ -13,7 +13,6 @@ class Ready(ipy.Extension):
     async def ready(self, event: ipy.events.Ready) -> None:
         # Fetch the guild and set the max presences to 10000
         guild = await self.bot.fetch_guild(GUILD_ID, force=True)
-        guild.max_presences = 10000
         await guild.gateway_chunk(wait=True, presences=True)
 
         print('ready')
