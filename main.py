@@ -20,6 +20,9 @@ bot = ipy.Client(
 # Load extensions
 bot.load_extension('cogs.events.bot.ready')
 
+bot.load_extension('cogs.events.message.message_reaction_add')
+bot.load_extension('cogs.events.message.message_reaction_remove')
+
 bot.load_extension('cogs.events.voice.voice_user_mute')
 bot.load_extension('cogs.events.voice.voice_user_deafen')
 
