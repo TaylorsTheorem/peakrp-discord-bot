@@ -27,6 +27,8 @@ services:
   bot:
     build:
       context: .
+    environment:
+      - PEAK_BOT_TOKEN=${PEAK_BOT_TOKEN}
     container_name: peak-bot
     expose:
       - 2337

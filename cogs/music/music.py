@@ -18,7 +18,7 @@ class Music(ipy.Extension):
     @ipy.listen()
     async def on_ready(self) -> None:
         self.lavalink: Lavalink = Lavalink(self.bot)
-        self.lavalink.add_node('localhost', '2337', 'youshallnotpass', 'de')
+        self.lavalink.add_node('lavalink', '2337', 'youshallnotpass', 'de')
         print('Music extension loaded')
 
     # Base command for music

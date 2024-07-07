@@ -18,25 +18,6 @@ bot = ipy.Client(
     fetch_members=True  # Fetch all members on startup
 )
 
-# Start Lavalink server
-# command = ['java', '-jar', 'cogs/lavalink/Lavalink.jar', '--spring.config.location=file:cogs/lavalink/application.yml']
-command = ['java', '-jar', 'Lavalink.jar']
-lavalink_process = subprocess.Popen(command, cwd='cogs/lavalink')
-
-# Wait for Lavalink server to start
-time.sleep(5)
-
-# Stop Lavalink server
-def stop_lavalink(signum, frame):
-    global lavalink_process
-    if lavalink_process:
-        lavalink_process.terminate()
-        lavalink_process.wait()
-    sys.exit(0)
-
-# Stop Lavalink server when bot is stopped
-signal.signal(signal.SIGINT, stop_lavalink)
-
 # Load extensions
 bot.load_extension('cogs.events.bot.ready')
 
