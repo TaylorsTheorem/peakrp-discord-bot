@@ -1,0 +1,31 @@
+name: Deploy to Remote Server
+
+on:
+  push:
+    branches:
+      - main  # Set to your default branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.HUBGIT_TOKEN }}
+
+    - name: Setting up SSH keys
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+
+    - name: Build and Run Docker Image on Remote Server
+      run: |
+        ssh -o StrictHostKeyChecking=no loading@57.153.179.33 << EOF
+          cd ~/peakrp-discord-bot
+          git pull origin main
+          docker build -t loading:peak-bot .
+          docker stop peak-bot || true
+          docker rm -f peak-bot || true
+          docker run -d -e PEAK_BOT_TOKEN=${{PEAK_BOT_TOKEN}} --name peak-bot loading:peak-bot
+        EOF
