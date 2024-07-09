@@ -1,6 +1,6 @@
 import interactions as ipy
 from interactions.ext.paginators import Paginator
-from config import CHANNEL_IDS, LOGO_URL
+from config import CHANNEL_IDS, ROLE_IDS, LOGO_URL
 from datetime import datetime
 import cogs.funcs.db as db
 
@@ -239,3 +239,51 @@ class Support(ipy.Extension):
             await paginator.send(ctx)
             return
         await ctx.send(embed=embed)
+    
+    # Subcommand for calling a user to the support waiting channel
+    # Parameters:
+    #   user (ipy.Member) - The user to call
+    @support_base.subcommand(
+        sub_cmd_name='call',
+        sub_cmd_description='Rufe einen User in den Support'
+    )
+    @ipy.slash_option(
+        name='user',
+        description='Welchen User willst du in den Support rufen?',
+        opt_type=ipy.OptionType.USER,
+        required=True
+    )
+    async def support_call(self, ctx: ipy.SlashContext, user: ipy.Member) -> None:
+        sup_chat_channel = ctx.guild.get_channel(CHANNEL_IDS['support_chat'])
+        sup_waiting_channel = ctx.guild.get_channel(CHANNEL_IDS['support_waiting'])
+        embed = ipy.Embed(
+            title='Support Call',
+            author=ipy.EmbedAuthor(name=user.global_name, icon_url=user.avatar_url),
+            description=f'{user.mention} du wurdest von {ctx.author.mention} in den Support gerufen.\n\nBitte finde dich im {sup_waiting_channel.mention} ein.',
+            color=0x00ffff,
+            timestamp=datetime.now()
+        )
+        await sup_chat_channel.send(f'||{user.mention}||',embed=embed)
+        await user.send(embed=embed)
+        await ctx.send(f'{user.mention} wurde in den Support gerufen.')
+    
+    # Event handling, when someone joins the support waiting channel
+    @ipy.listen()
+    async def join_waiting_channel(self, event: ipy.events.VoiceUserJoin) -> None:
+        # Check if user joined the support waiting channel
+        if not event.channel.id == CHANNEL_IDS['support_waiting']:
+            return
+        
+        embed = ipy.Embed(
+            title='Support',
+            description=f'{event.author.id}\n{event.author.mention} wartet im Support.',
+            color=0x00ffff,
+            timestamp=datetime.now()
+        )
+
+        mentions = f''
+        for i in range(3):
+            role = event.channel.guild.get_role(ROLE_IDS[f'sup{i+1}'])
+            mentions += f'{role.mention} '
+
+        await self.bot.get_channel(CHANNEL_IDS['team_commands']).send(mentions ,embed=embed)
