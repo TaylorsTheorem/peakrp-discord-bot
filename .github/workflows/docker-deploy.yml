@@ -23,9 +23,9 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no loading@57.153.179.33 << EOF
           cd ~/peakrp-discord-bot
-          git pull origin main
-          docker image rm -f loading:peak-bot || true
+          git pull
+          docker rm -f peak-bot
+          docker image rm -f loading:peak-bot
           docker build -t loading:peak-bot .
-          docker rm -f peak-bot || true
           docker run -d -e PEAK_BOT_TOKEN=${{ secrets.PEAK_BOT_TOKEN }} --name peak-bot loading:peak-bot
         EOF
