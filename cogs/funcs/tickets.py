@@ -35,7 +35,7 @@ class Tickets(ipy.Extension):
                 value='Die Ausnutzung dieses Systems für missbräuchliche Zwecke wird streng geahndet. Wir behalten uns das Recht vor, entsprechende Maßnahmen zu ergreifen.'
                 )
             ],
-            color=0xf9d900,
+            color=0x00ffff,
             thumbnail=LOGO_URL,
         )
 
@@ -96,7 +96,7 @@ class Tickets(ipy.Extension):
         )
 
         # Send the embed and dropdown menu to the ticket channel
-        await self.bot.get_channel(CHANNEL_IDS['tickets']).send(embeds=embed, components=dropdown)
+        await self.bot.get_channel(CHANNEL_IDS['tickets']).send(embeds=embed, components=dropdown, silent=True)
         await ctx.send(f'Ticket System restarted!')
     
 
