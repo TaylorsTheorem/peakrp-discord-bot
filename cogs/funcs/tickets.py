@@ -1,8 +1,8 @@
 import interactions as ipy
 from config import GUILD_ID, TICKET_CATEGORY_IDS, CHANNEL_IDS, ROLE_IDS, LOGO_URL
 from datetime import datetime
-import re
 import cogs.funcs.db as db
+from cogs.funcs.utils import extract_last_integer, extract_first_string
 
 
 # Collection of commands for ticket related tasks
@@ -360,22 +360,3 @@ class Tickets(ipy.Extension):
     async def btn_ticket_close_no(self, ctx: ipy.ComponentContext) -> None:
         messages = await ctx.channel.fetch_messages()
         await messages[0].delete()
-
-
-# Helper functions for extracting information from strings
-def extract_last_integer(string):
-    match = re.search(r'\d+$', string)
-    if match:
-        return int(match.group())
-    else:
-        return None
-
-def extract_middle_integer(string):
-    match = re.search(r'\| (\d+) \|', string)
-    if match:
-        return int(match.group(1))
-    else:
-        return None
-    
-def extract_first_string(string):
-    return string.split(' | ')[0].strip()
