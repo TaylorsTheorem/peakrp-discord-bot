@@ -19,13 +19,20 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
+    - name: Configure SSH for Git
+      run: |
+        echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
+        git config --global core.sshCommand "ssh -i ~/.ssh/deploy_key"
+
     - name: Build and Run Docker Image on Remote Server
       run: |
         ssh -o StrictHostKeyChecking=no loading@57.153.179.33 << EOF
           cd ~/peakrp-discord-bot
-          git pull origin main
-          docker image rm -f loading:peak-bot || true
+          git pull
+          docker rm -f peak-bot
+          docker image rm -f loading:peak-bot
           docker build -t loading:peak-bot .
-          docker rm -f peak-bot || true
           docker run -d -e PEAK_BOT_TOKEN=${{ secrets.PEAK_BOT_TOKEN }} --name peak-bot loading:peak-bot
         EOF
