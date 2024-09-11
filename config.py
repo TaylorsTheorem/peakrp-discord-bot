@@ -21,7 +21,11 @@ CHANNEL_IDS = {
     'team_commands': 1242186789746114611,
     'support_waiting': 1242186726089166953,
     'tickets': 1242186705809969295,
-    'support_chat': 1248009829885411419
+    'support_chat': 1248009829885411419,
+
+    # Sentinel log channels
+    'presence_update': 1283487302571790367,
+    'typing_start': 1283487528585789470,
 }
 
 TICKET_CATEGORY_IDS = {
