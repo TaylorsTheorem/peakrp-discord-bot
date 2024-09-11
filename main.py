@@ -33,6 +33,10 @@ bot.load_extension('cogs.funcs.send')
 bot.load_extension('cogs.funcs.support')
 bot.load_extension('cogs.funcs.tickets')
 bot.load_extension('cogs.funcs.user')
+bot.load_extension('cogs.funcs.help')
+
+bot.load_extension('cogs.sentinel.presence_update')
+bot.load_extension('cogs.sentinel.typing_start')
 
 # Setup database if not exists and create database connection
 db.setup_database()
