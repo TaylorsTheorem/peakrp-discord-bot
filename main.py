@@ -37,7 +37,7 @@ bot.load_extension('cogs.funcs.user')
 
 # bot.load_extension('cogs.sentinel.presence_update')
 # bot.load_extension('cogs.sentinel.typing_start')
-#Dummy commit3
+
 # Setup database if not exists and create database connection
 db.setup_database()
 db.create_connection()
