@@ -21,10 +21,10 @@ jobs:
 
     - name: Configure SSH for Git
       run: |
-        echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
-        chmod 600 ~/.ssh/deploy_key
+        echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/github_deploy_key
+        chmod 600 ~/.ssh/github_deploy_key
         ssh-keyscan github.com >> ~/.ssh/known_hosts
-        git config --global core.sshCommand "ssh -i ~/.ssh/deploy_key"
+        git config --global core.sshCommand "ssh -i ~/.ssh/github_deploy_key"
 
     - name: Build and Run Docker Image on Remote Server
       run: |
