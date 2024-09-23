@@ -3,7 +3,7 @@ name: Deploy to Remote Server
 on:
   push:
     branches:
-      - main  # Set to your default branch
+      - main
 
 jobs:
   deploy:
@@ -28,11 +28,12 @@ jobs:
 
     - name: Build and Run Docker Image on Remote Server
       run: |
-        ssh -o StrictHostKeyChecking=no loading@57.153.179.33 << EOF
+        ssh -o StrictHostKeyChecking=no loading@${{ secrets.REMOTE_IP }} << EOF
           cd ~/peakrp-discord-bot
+          git remote set-url origin git@github.com:TaylorsTheorem/peakrp-discord-bot.git
           git pull
           docker rm -f peak-bot
           docker image rm -f loading:peak-bot
-          docker build -t loading:peak-bot .
+          docker build --no-cache -t loading:peak-bot .
           docker run -d -e PEAK_BOT_TOKEN=${{ secrets.PEAK_BOT_TOKEN }} --name peak-bot loading:peak-bot
         EOF
