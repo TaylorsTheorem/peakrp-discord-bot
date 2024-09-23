@@ -29,6 +29,7 @@ jobs:
     - name: Build and Run Docker Image on Remote Server
       run: |
         ssh -o StrictHostKeyChecking=no loading@${{ secrets.REMOTE_IP }} << EOF
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
           cd ~/peakrp-discord-bot
           git remote set-url origin git@github.com:TaylorsTheorem/peakrp-discord-bot.git
           git pull
