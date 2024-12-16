@@ -1,4 +1,5 @@
 import interactions as ipy
+from config import COLORS, LOGO_URL, CHANNEL_IDS, EMOJI_IDS, ROLE_IDS
 from datetime import datetime
 
 
@@ -27,7 +28,7 @@ class Send(ipy.Extension):
     )
     async def send_message(self, ctx: ipy.SlashContext, channel: ipy.BaseChannel, message: str) -> None:
         await channel.send(message)
-        await ctx.send(f'Folgendes wurde in {channel.mention} gesendet:\n\n>>> {message}')
+        await ctx.send(f'Folgendes wurde in {channel.mention} gesendet:\n\n>>> {message}') # Log
 
 
     # Command for sending an embed message to a specified channel
@@ -104,7 +105,7 @@ class Send(ipy.Extension):
 
         # Send the embed message
         await channel.send(embeds=embed)
-        await ctx.send(f'Folgendes wurde in {channel.mention} gesendet:\n\n>>> {embed}')    # Log
+        await ctx.send(f'Folgendes wurde in {channel.mention} gesendet:\n\n>>> {embed}') # Log
     
 
     # Command for sending a direct message to a user
@@ -129,7 +130,7 @@ class Send(ipy.Extension):
             await user.send(message)
         else:
             await user.send(message + f'\n\n_Gruß {ctx.user.mention}_')
-        await ctx.send(f'Folgendes wurde an {user.mention} **privat** gesendet:\n\n>>> {message}')  # Log
+        await ctx.send(f'Folgendes wurde an {user.mention} **privat** gesendet:\n\n>>> {message}') # Log
 
     
     # Command for replying to a message
@@ -160,4 +161,69 @@ class Send(ipy.Extension):
         # Fetch the message and reply to it
         msg = await ctx.guild.get_channel(channel.id).fetch_message(message_id)
         await msg.reply(message)
-        await ctx.send(f'Folgendes wurde in {channel.mention} gesendet:\n\n>>> {message}')  # Log
+        await ctx.send(f'Folgendes wurde in {channel.mention} gesendet:\n\n>>> {message}') # Log
+    
+    # Command for sending a vote message
+    @ipy.slash_command(
+        name='send_vote',
+        description='Erstelle eine Umfrage',
+    )
+    @ipy.slash_option(
+        name='description',
+        description='Was soll als Beschreibung stehen?',
+        opt_type=ipy.OptionType.STRING,
+        required=True
+    )
+    @ipy.slash_option(
+        name='reason',
+        description='Warum soll die Umfrage erstellt werden?',
+        opt_type=ipy.OptionType.STRING,
+        required=False
+    )
+    @ipy.slash_option(
+        name='channel',
+        description='In welchen Channel soll die Nachricht gesendet werden?',
+        opt_type=ipy.OptionType.CHANNEL,
+        required=False
+    )
+    @ipy.slash_option(
+        name='image',
+        description='Welches Bild soll als Bild verwendet werden?',
+        opt_type=ipy.OptionType.STRING,
+        required=False
+    )
+    async def send_vote(self,
+                   ctx: ipy.SlashContext,
+                   description: str,
+                   reason: str = None,
+                   channel: ipy.TYPE_GUILD_CHANNEL = None,
+                   image: str = None
+                   ) -> None:
+        
+        embed = ipy.Embed(
+                title="Abstimmung",
+                description=description,
+                color=int(f'{COLORS["default"]}', 16),
+                footer=ipy.EmbedFooter(text='Bitte reagieren um abzustimmen'),
+                author=ipy.EmbedAuthor(name=f'{ctx.bot.user.display_name}', icon_url=ctx.bot.user.avatar_url),
+                timestamp=datetime.now(),
+                thumbnail=ipy.EmbedAttachment(url=LOGO_URL)
+            )
+        
+        # Add optional reason, if provided
+        if reason:
+            embed.add_field(name='Grund', value=reason, inline=False)
+
+        # Add optional image, if provided
+        if image:
+            embed.set_image(url=image)
+
+        # Send the embed message to vote channel
+        if not channel:
+            channel = ctx.guild.get_channel(CHANNEL_IDS['vote'])
+
+        msg = await channel.send(content=f'<@&{ROLE_IDS["citizen"]}>', embeds=embed) # Ping citizens
+        await msg.add_reaction(emoji=ipy.PartialEmoji(id=EMOJI_IDS['upvote'], name='upvote')) # Add upvote and downvote reactions
+        await msg.add_reaction(emoji=ipy.PartialEmoji(id=EMOJI_IDS['downvote'], name='downvote'))
+        
+        await ctx.send(f'Folgendes wurde in {channel.mention} gesendet:\n\n>>> {embed}') # Log
