@@ -37,6 +37,7 @@ CHANNEL_IDS = {
     'support_waiting': 1242186726089166953,
     'tickets': 1242186705809969295,
     'support_chat': 1248009829885411419,
+    'vote': 1242186713426559101,
 
     # Sentinel log channels
     'presence_update': 1283487302571790367,
