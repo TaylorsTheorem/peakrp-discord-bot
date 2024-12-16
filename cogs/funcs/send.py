@@ -181,6 +181,12 @@ class Send(ipy.Extension):
         required=False
     )
     @ipy.slash_option(
+        name='title',
+        description='Welcher Titel soll die Abstimmung haben? (1-2 Wörter)',
+        opt_type=ipy.OptionType.STRING,
+        required=False
+    )
+    @ipy.slash_option(
         name='channel',
         description='In welchen Channel soll die Nachricht gesendet werden?',
         opt_type=ipy.OptionType.CHANNEL,
@@ -196,10 +202,16 @@ class Send(ipy.Extension):
                    ctx: ipy.SlashContext,
                    description: str,
                    reason: str = None,
+                   title: str = None,
                    channel: ipy.TYPE_GUILD_CHANNEL = None,
                    image: str = None
                    ) -> None:
         
+        # If title is provided, add it to the embed message
+        if title:
+            description = f'Abstimmung | {title}'
+
+        # Create the embed message
         embed = ipy.Embed(
                 title="Abstimmung",
                 description=description,
