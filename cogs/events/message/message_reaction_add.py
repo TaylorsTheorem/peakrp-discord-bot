@@ -13,4 +13,4 @@ class MessageReactionAdd(ipy.Extension):
         if event.message.id == 1259573308676902975:
             # Check if correct emoji then add Bürger role
             if event.emoji.id == 1251982089621082193:
-                await event.author.add_role(ROLE_IDS['buerger'])
+                await event.author.add_role(ROLE_IDS['citizen'])
