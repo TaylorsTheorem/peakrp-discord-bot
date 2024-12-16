@@ -16,6 +16,21 @@ BOT_ACTIVITY = ipy.Activity(
     type=ipy.ActivityType.COMPETING
 )
 
+# Colors used throughout the bot
+COLORS = {
+    'default': '7EDCF8', # Main community color
+    'success': '00FF00',
+    'error': 'FF0000',
+    'info': '0000FF',
+    'warning': 'FFFF00',
+}
+
+EMOJI_IDS = {
+    'peak': 1248180032510365756,
+    'upvote': 1265745866291941406,
+    'downvote': 1265745856041193482,
+}
+
 CHANNEL_IDS = {
     'abmelden': 1242186810369642518,
     'team_commands': 1242186789746114611,
@@ -51,7 +66,7 @@ ROLE_IDS = {
     'sv': 1242186552218615968,
     'team': 1242186564172517437,
     'wl': 1242186572825231441,
-    'buerger': 1242186573727010826
+    'citizen': 1242186573727010826
 }
 
 USER_IDS = {
