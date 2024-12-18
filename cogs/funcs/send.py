@@ -209,7 +209,9 @@ class Send(ipy.Extension):
         
         # If title is provided, add it to the embed message
         if title:
-            description = f'Abstimmung | {title}'
+            title = f'Abstimmung | {title}'
+        else:
+            title = 'Abstimmung'
 
         # Create the embed message
         embed = ipy.Embed(
