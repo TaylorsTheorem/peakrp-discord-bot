@@ -215,7 +215,7 @@ class Send(ipy.Extension):
 
         # Create the embed message
         embed = ipy.Embed(
-                title="Abstimmung",
+                title=title,
                 description=description,
                 color=int(f'{COLORS["default"]}', 16),
                 footer=ipy.EmbedFooter(text='Bitte reagieren um abzustimmen'),
