@@ -264,7 +264,8 @@ class Tickets(ipy.Extension):
 
         # Check if the user is the ticket owner
         messages = await ctx.channel.fetch_messages()
-        if not (ctx.member.username == extract_first_string(messages[-1].embeds[0].author.name)):
+        if not (ctx.member.username == extract_first_string(messages[-1].embeds[0].author.name) # If user is ticket owner
+                or ctx.member.id == extract_last_integer(messages[-1].embeds[0].footer.text)): # If user is ticket supporter
             await ctx.send(f'{ctx.user.mention} Du kannst dieses Ticket nicht schließen!', delete_after=10, ephemeral=True)
             return
         
