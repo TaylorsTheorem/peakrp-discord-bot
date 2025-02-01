@@ -254,7 +254,6 @@ class Support(ipy.Extension):
         required=True
     )
     async def support_call(self, ctx: ipy.SlashContext, user: ipy.Member) -> None:
-        sup_chat_channel = ctx.guild.get_channel(CHANNEL_IDS['support_chat'])
         sup_waiting_channel = ctx.guild.get_channel(CHANNEL_IDS['support_waiting'])
         embed = ipy.Embed(
             title='Support Call',
@@ -263,7 +262,6 @@ class Support(ipy.Extension):
             color=0x00ffff,
             timestamp=datetime.now()
         )
-        await sup_chat_channel.send(f'||{user.mention}||',embed=embed)
         await user.send(embed=embed)
         await ctx.send(f'{user.mention} wurde in den Support gerufen.')
     
