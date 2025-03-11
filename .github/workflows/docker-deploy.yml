@@ -22,9 +22,7 @@ jobs:
           git remote set-url origin git@github.com:TaylorsTheorem/peakrp-discord-bot.git
           git pull
           
-          if docker exec peak-bot test -f /app/peak.db; then
-            docker cp peak-bot:/app/peak.db /tmp/peak.db
-          fi
+          docker cp peak-bot:/app/peak.db /tmp/peak.db
           
           docker rm -f peak-bot
           
@@ -34,8 +32,6 @@ jobs:
           
           docker run -d -e PEAK_BOT_TOKEN=${{ secrets.PEAK_BOT_TOKEN }} --name peak-bot loading:peak-bot
           
-          if [ -f /tmp/peak.db ]; then
-            docker cp /tmp/peak.db peak-bot:/app/peak.db
-            rm /tmp/peak.db
-          fi
+          docker cp /tmp/peak.db peak-bot:/app/peak.db
+          rm /tmp/peak.db
         EOF
