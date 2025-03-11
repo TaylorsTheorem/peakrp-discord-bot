@@ -15,4 +15,4 @@ class Ready(ipy.Extension):
         guild = await self.bot.fetch_guild(GUILD_ID, force=True)
         await guild.gateway_chunk(wait=True, presences=True)
 
-        print('Bot now launched!')
+        print('Bot now launched! Ready for actions!')

@@ -19,7 +19,7 @@ jobs:
         sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.REMOTE_IP }} << 'EOF'
           
           cd ~/peakrp-discord-bot
-          git remote set-url origin git@github.com:TaylorsTheorem/peakrp-discord-bot.git
+          git remote set-url origin https://github.com/TaylorsTheorem/peakrp-discord-bot.git
           git pull
           
           docker cp peak-bot:/app/db/peak.db /tmp/peak.db
