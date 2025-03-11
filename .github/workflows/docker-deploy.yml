@@ -14,27 +14,28 @@ jobs:
       with:
         token: ${{ secrets.HUBGIT_TOKEN }}
 
-    - name: Setting up SSH keys
-      uses: webfactory/ssh-agent@v0.9.0
-      with:
-        ssh-private-key: ${{ secrets.DEPLOY_KEY }}
-
-    - name: Configure SSH for Git
-      run: |
-        echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/github_deploy_key
-        chmod 600 ~/.ssh/github_deploy_key
-        ssh-keyscan github.com >> ~/.ssh/known_hosts
-        git config --global core.sshCommand "ssh -i ~/.ssh/github_deploy_key"
-
     - name: Build and Run Docker Image on Remote Server
       run: |
-        ssh -o StrictHostKeyChecking=no loading@${{ secrets.REMOTE_IP }} << EOF
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
+        sshpass -p "${{ secrets.REMOTE_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.REMOTE_IP }} << 'EOF'
+          
           cd ~/peakrp-discord-bot
           git remote set-url origin git@github.com:TaylorsTheorem/peakrp-discord-bot.git
           git pull
+          
+          if docker exec peak-bot test -f /app/peak.db; then
+            docker cp peak-bot:/app/peak.db /tmp/peak.db
+          fi
+          
           docker rm -f peak-bot
+          
           docker image rm -f loading:peak-bot
+          
           docker build --no-cache -t loading:peak-bot .
+          
           docker run -d -e PEAK_BOT_TOKEN=${{ secrets.PEAK_BOT_TOKEN }} --name peak-bot loading:peak-bot
+          
+          if [ -f /tmp/peak.db ]; then
+            docker cp /tmp/peak.db peak-bot:/app/peak.db
+            rm /tmp/peak.db
+          fi
         EOF
