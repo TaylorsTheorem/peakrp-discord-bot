@@ -56,9 +56,12 @@ class Cheaterstats(ipy.Extension):
 
         paginator_string = '## Gefundene Cheater Discords\n'
         for server in server_data:
-            dt = datetime.strptime(server['joined'], "%Y-%m-%d %H:%M:%S")
-            unix_timestamp = int(dt.timestamp())
-            discord_timestamp = f"<t:{unix_timestamp}:f>"
+            try:
+                dt = datetime.strptime(server['joined'], "%Y-%m-%d %H:%M:%S")
+                unix_timestamp = int(dt.timestamp())
+                discord_timestamp = f"<t:{unix_timestamp}:f>"
+            except:
+                discord_timestamp = 'Unbekannt'
 
             if server['roles']:
                 roles_formatted = "".join(
