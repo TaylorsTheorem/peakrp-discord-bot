@@ -30,7 +30,10 @@ jobs:
 
           docker build --pull --no-cache -t loading:peak-bot .
           
-          docker run -d -e PEAK_BOT_TOKEN=${{ secrets.PEAK_BOT_TOKEN }} --name peak-bot loading:peak-bot
+          docker run -d \
+            -e PEAK_BOT_TOKEN=${{ secrets.PEAK_BOT_TOKEN }} \
+            -e CHEATERSTATS_TOKEN=${{ secrets.CHEATERSTATS_TOKEN }} \
+            --name peak-bot loading:peak-bot
           
           docker cp /tmp/peak.db peak-bot:/app/db/peak.db
           rm /tmp/peak.db
