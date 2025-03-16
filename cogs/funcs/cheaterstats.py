@@ -33,7 +33,7 @@ class Cheaterstats(ipy.Extension):
 
         # if not data.get('data'):
         #     await ctx.send(content='No Cheating Discords found!')
-        await ctx.send(embed=create_embed(data, user))
+        await ctx.send(embed=create_embed(ctx, data, user))
 
         if not data.get('data'):
             return
@@ -82,10 +82,11 @@ def get_user_data(user: ipy.User) -> dict:
     data = response.json()
     return data
 
-def create_embed(data: dict, user: ipy.User) -> ipy.Embed:
+def create_embed(ctx: ipy.SlashContext, data: dict, user: ipy.User) -> ipy.Embed:
 
     embed = ipy.Embed(
         title='Cheater Stats Info',
+        author=ipy.EmbedAuthor(name=f'{ctx.member.username} | {ctx.member.id}', icon_url=ctx.member.avatar_url),
         description=f'User: {user.mention}, ID: {user.id}',
         thumbnail=user.avatar_url,
         footer=f'Dankend Zugang von Cheater Stats bekommen .gg/cheaterstats',
