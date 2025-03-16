@@ -33,7 +33,7 @@ class Cheaterstats(ipy.Extension):
 
         # if not data.get('data'):
         #     await ctx.send(content='No Cheating Discords found!')
-        await ctx.send(embed=create_embed(self.bot, data, user))
+        await ctx.send(embed=create_embed(data, user))
 
         if not data.get('data'):
             return
@@ -52,9 +52,6 @@ class Cheaterstats(ipy.Extension):
             }
             for item in data.get('data')
         ]
-        print(server_data)
-        print([server['server_name'] for server in server_data])
-
 
         paginator_string = '## Gefundene Cheater Discords\n'
         for server in server_data:
@@ -71,7 +68,7 @@ class Cheaterstats(ipy.Extension):
                 roles_formatted = "Keine Rollen gefunden."
 
             paginator_string += f"**Server-Name:** {server['server_name']}\nBeigetreten: {discord_timestamp}\nRollen:{roles_formatted}\n\n"
-        paginator = Paginator.create_from_string(paginator_string, page_size=1000)
+        paginator = Paginator.create_from_string(self.bot, paginator_string, page_size=1000)
         paginator.default_color = 0xFF0000
 
         await paginator.send(ctx)
