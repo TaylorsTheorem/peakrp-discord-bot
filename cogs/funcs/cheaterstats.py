@@ -71,7 +71,7 @@ class Cheaterstats(ipy.Extension):
                 roles_formatted = "Keine Rollen gefunden."
 
             paginator_string += f"**Server-Name:** {server['server_name']}\nBeigetreten: {discord_timestamp}\nRollen:{roles_formatted}\n\n"
-        paginator = Paginator.create_from_string(self.bot, paginator_string, page_size=1000)
+        paginator = Paginator.create_from_string(paginator_string, page_size=1000)
         paginator.default_color = 0xFF0000
 
         await paginator.send(ctx)
