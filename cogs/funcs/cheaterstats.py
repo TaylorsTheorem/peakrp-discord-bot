@@ -2,6 +2,7 @@ import interactions as ipy
 from interactions.ext.paginators import Paginator
 import requests, os
 from datetime import datetime
+from config import LOGO_URL
 
 url = 'http://cs.api.synbypass.xyz/api/checkUser.php'
 
@@ -86,7 +87,7 @@ def create_embed(ctx: ipy.SlashContext, data: dict, user: ipy.User) -> ipy.Embed
 
     embed = ipy.Embed(
         title='Cheater Stats Info',
-        author=ipy.EmbedAuthor(name=f'{ctx.member.username} | {ctx.member.id}', icon_url=ctx.member.avatar_url),
+        author=ipy.EmbedAuthor(name=f'{user.username} | {user.display_name}', icon_url=LOGO_URL),
         description=f'User: {user.mention}, ID: {user.id}',
         thumbnail=user.avatar_url,
         footer=f'Dankend Zugang von Cheater Stats bekommen .gg/cheaterstats',
