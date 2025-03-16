@@ -27,6 +27,7 @@ bot.load_extension('cogs.events.voice.voice_user_mute')
 bot.load_extension('cogs.events.voice.voice_user_deafen')
 
 bot.load_extension('cogs.funcs.cfx_api')
+bot.load_extension('cogs.funcs.cheaterstats')
 bot.load_extension('cogs.funcs.loa')
 bot.load_extension('cogs.funcs.mod')
 bot.load_extension('cogs.funcs.send')
