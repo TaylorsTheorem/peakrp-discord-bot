@@ -70,7 +70,7 @@ class Cheaterstats(ipy.Extension):
 
             paginator_string += f"**Server-Name:** {server['server_name']}\nBeigetreten: {discord_timestamp}\nRollen:{roles_formatted}\n\n"
         paginator = Paginator.create_from_string(self.bot, paginator_string, page_size=1000)
-        paginator.default_color = 0xFF0000
+        paginator.default_color = 0xCC0000
 
         await paginator.send(ctx)
 
@@ -90,19 +90,19 @@ def create_embed(ctx: ipy.SlashContext, data: dict, user: ipy.User) -> ipy.Embed
         author=ipy.EmbedAuthor(name=f'{user.username} | {user.display_name}', icon_url=LOGO_URL),
         description=f'User: {user.mention}, ID: {user.id}',
         thumbnail=user.avatar_url,
-        footer=f'Dankend Zugang von Cheater Stats bekommen .gg/cheaterstats',
+        footer=f'Powered by Cheater Stats | .gg/cheaterstats',
         timestamp=datetime.now()
     )
 
     if not data.get('data'):
-        embed.color = 0x00FF00
+        embed.color = 0x00CC00
         embed.title = '✅ ' + embed.title
         embed.add_field(name='Einträge', value='Keine Einträge gefunden!')
         return embed
 
     num_entries = len(data)
     
-    embed.color = 0xFF0000
+    embed.color = 0xCC0000
     embed.title = '🚨 ' + embed.title
     embed.add_field(name='Einträge', value=f'{num_entries} Einträge gefunden!')
 
