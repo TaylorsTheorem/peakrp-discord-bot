@@ -22,6 +22,9 @@ jobs:
           git remote set-url origin https://github.com/TaylorsTheorem/peakrp-discord-bot.git
           git pull
 
+          docker cp peak-bot:/app/db/peak.db /tmp/peak.db
+          docker cp peak-bot:/app/data/tracked_users.json /tmp/tracked_users.json
+
           docker stop peak-bot || true
           docker rm -f peak-bot || true
           docker image rm -f loading:peak-bot || true
