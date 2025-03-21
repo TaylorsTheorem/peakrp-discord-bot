@@ -33,6 +33,15 @@ class PresenceUpdate(ipy.Extension):
             "dnd": 0x982929,
         }
 
+        activities_string = "\n".join([
+            f"- {activity.name or 'Unbenannt'}"
+            f" ({activity.state or 'Kein Status'})"
+            f" {activity.details or ''}"
+            f" {activity.created_at or ''}"
+            f" {activity.timestamps or ''}"
+            for activity in event.activities
+        ]) or "Keine Aktivitäten"
+        
         # Create embed
         embed = ipy.Embed(
             title=f"Presence Update",
@@ -46,7 +55,7 @@ class PresenceUpdate(ipy.Extension):
                 # Create embed fields for each key value pair in the client status dictionary (all currently logged in devices)
                 ipy.EmbedField("Current devices", "\n".join([f"{key}: {value}" for key, value in event.client_status.items()])),
                 # Create embed fields for each activity in the users activity list
-                ipy.EmbedField("Activities", "\n".join([f"- {activity.name} ({activity.state}) {activity.details} {activity.created_at} {activity.timestamps}" for activity in event.activities]))
+                ipy.EmbedField("Activities", activities_string)
             ],
         )
 
