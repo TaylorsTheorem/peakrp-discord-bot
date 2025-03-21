@@ -63,10 +63,10 @@ class TrackedUsers(ipy.Extension):
     )
     async def track_add(self, ctx: ipy.SlashContext, user: ipy.User):
         if is_tracked(user.id):
-            await ctx.send(f"{user.mention} wird bereits getrackt.", ephemeral=True)
+            await ctx.send(f"{user.mention} wird bereits getrackt.")
             return
         add_tracked_user(user.id)
-        await ctx.send(f"{user.mention} wird jetzt getrackt.", ephemeral=True)
+        await ctx.send(f"{user.mention} wird jetzt getrackt.")
 
     @track_base.subcommand(
         sub_cmd_name='remove',
@@ -80,10 +80,10 @@ class TrackedUsers(ipy.Extension):
     )
     async def track_remove(self, ctx: ipy.SlashContext, user: ipy.User):
         if not is_tracked(user.id):
-            await ctx.send(f"{user.mention} wird nicht getrackt.", ephemeral=True)
+            await ctx.send(f"{user.mention} wird nicht getrackt.")
             return
         remove_tracked_user(user.id)
-        await ctx.send(f"{user.mention} wird nicht mehr getrackt.", ephemeral=True)
+        await ctx.send(f"{user.mention} wird nicht mehr getrackt.")
     
     @track_base.subcommand(
         sub_cmd_name="list",
@@ -92,4 +92,4 @@ class TrackedUsers(ipy.Extension):
     async def track_list(self, ctx: ipy.SlashContext):
         ids = get_tracked_users()
         mentions = [f"<@{uid}>" for uid in ids]
-        await ctx.send("\n".join(mentions) if mentions else "Keine Benutzer werden getrackt.", ephemeral=True)
+        await ctx.send("\n".join(mentions) if mentions else "Keine Benutzer werden getrackt.")
