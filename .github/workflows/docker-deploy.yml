@@ -29,7 +29,6 @@ jobs:
           docker build --pull --no-cache -t loading:peak-bot .
           
           docker run -d \
-            docker run -d \
             -e PEAK_BOT_TOKEN=${{ secrets.PEAK_BOT_TOKEN }} \
             -e CHEATERSTATS_TOKEN=${{ secrets.CHEATERSTATS_TOKEN }} \
             -v peak-db:/app/db \
