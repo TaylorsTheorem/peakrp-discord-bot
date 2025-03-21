@@ -1,6 +1,7 @@
 import interactions as ipy
 from datetime import datetime
 from config import CHANNEL_IDS, LOGO_URL
+import cogs.funcs.tracked_users as tracked_users
 
 # Sentinel extension for PresenceUpdate event
 # Part of the broadband Peak Sentinel logging system
@@ -11,6 +12,9 @@ class PresenceUpdate(ipy.Extension):
     
     @ipy.listen()
     async def on_presence_update(self, event: ipy.events.PresenceUpdate):
+
+        if not tracked_users.is_tracked(event.user.id):
+            return
 
         # Extract image urls from users activities if activity is present
         large_images = [activity.assets.large_image for activity in event.activities if activity.assets and activity.assets.large_image]

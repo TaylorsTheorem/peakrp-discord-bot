@@ -8,6 +8,8 @@ LOGO_URL = 'https://cdn.discordapp.com/attachments/1242538461123317850/124818029
 DATABASE_PATH = "db/peak.db"
 DATABASE_SETUP_FILE = "db/setup.sql"
 
+TRACKED_USERS_FILE= 'data/tracked_users.json'
+
 INTENTS = ipy.Intents.ALL
 
 BOT_STATUS = ipy.Status.DND

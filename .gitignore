@@ -2,4 +2,5 @@ __pycache__
 peak.db
 data.json
 players.json
+tracked_users.json
 .github
