@@ -4,7 +4,7 @@ import requests, os
 from datetime import datetime
 from config import LOGO_URL
 
-url = 'https://api.cheaterstats.cc/api/checkUser.php?'
+url = 'https://api.cheaterstats.cc/api/checkUser.php'
 
 api_token = os.getenv('CHEATERSTATS_TOKEN')
 headers = {
