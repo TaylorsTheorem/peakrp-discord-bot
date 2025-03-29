@@ -79,7 +79,7 @@ class Cheaterstats(ipy.Extension):
 
 def get_user_data(user: ipy.User) -> dict:
     try:
-        response = requests.get(f'{url}?memberId={user.id}', headers=headers)
+        response = requests.get(f'{url}memberId={user.id}', headers=headers)
     except:
         print(f'Couldn\'t get data from API for user_id={user.id}')
     
