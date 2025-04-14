@@ -84,7 +84,7 @@ def get_user_data(user: ipy.User) -> dict:
         print(f'Couldn\'t get data from API for user_id={user.id}')
     
     data = response.json()
-    return data
+    return data.get('data')
 
 def create_embed(ctx: ipy.SlashContext, data: dict, user: ipy.User) -> ipy.Embed:
 
