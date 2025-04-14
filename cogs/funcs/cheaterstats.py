@@ -84,7 +84,7 @@ def get_user_data(user: ipy.User) -> dict:
         print(f'Couldn\'t get data from API for user_id={user.id}')
     
     data = response.json()
-    return data.get('data')
+    return data
 
 def create_embed(ctx: ipy.SlashContext, data: dict, user: ipy.User) -> ipy.Embed:
 
@@ -103,7 +103,7 @@ def create_embed(ctx: ipy.SlashContext, data: dict, user: ipy.User) -> ipy.Embed
         embed.add_field(name='Einträge', value='Keine Einträge gefunden!')
         return embed
 
-    num_entries = len(data)
+    num_entries = len(data.get('data'))
     
     embed.color = 0xCC0000
     embed.title = '🚨 ' + embed.title
